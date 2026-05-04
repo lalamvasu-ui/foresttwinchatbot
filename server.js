@@ -18,7 +18,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Google Gemini AI for chat
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 // System prompt — tells Gemini how to behave
 const systemPrompt = `

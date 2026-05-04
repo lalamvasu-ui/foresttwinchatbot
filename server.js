@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { Resend } = require("resend");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const knowledge = require("./knowledge");
 
@@ -12,8 +13,26 @@ app.use(express.static("public"));
 
 let leads = [];
 
-// Resend API for sending emails (works on Render free tier)
+// Resend for emails
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Google Gemini AI for chat
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+// System prompt — tells Gemini how to behave
+const systemPrompt = `
+You are the official AI assistant for ForestTwin, a sustainability platform powered by FusionPact.
+
+Your job is to answer visitor questions politely, professionally, and helpfully — using only the information provided below about ForestTwin's services. If a question is outside this knowledge, say you'll connect them with the marketing team at lalam.vasu@fusionpact.com.
+
+Keep answers short and clear (2-4 sentences). Always be warm and professional.
+
+If asked about pricing, say pricing depends on requirements and offer to connect them with the team.
+
+KNOWLEDGE BASE:
+${knowledge}
+`;
 
 app.post("/save-lead", async (req, res) => {
   const { name, email } = req.body;
@@ -42,44 +61,17 @@ Time: ${new Date()}
   }
 });
 
-app.post("/chat", (req, res) => {
-  const message = req.body.message.toLowerCase();
+app.post("/chat", async (req, res) => {
+  const message = req.body.message;
 
-  let answer = "Could you tell me which ForestTwin service you're looking for?";
-
-  if (message.includes("biochar")) {
-    answer = "ForestTwin supplies standardized industrial-grade biochar with COA and scalable supply.";
+  try {
+    const result = await model.generateContent(systemPrompt + "\n\nVisitor: " + message + "\n\nAssistant:");
+    const answer = result.response.text();
+    res.json({ answer });
+  } catch (err) {
+    console.error("AI error:", err);
+    res.json({ answer: "Sorry, I'm having trouble responding right now. Please contact lalam.vasu@fusionpact.com for assistance." });
   }
-
-  if (message.includes("carbon")) {
-    answer = "ForestTwin provides verified carbon credits with due-diligence support.";
-  }
-
-  if (message.includes("dmrv") || message.includes("mrv")) {
-    answer = "ForestTwin DMRV automates measurement, reporting and verification with IoT, OCR and registry integrations.";
-  }
-
-  if (message.includes("machinery") || message.includes("machine")) {
-    answer = "ForestTwin offers pellet machines, shredders, grinders and post-harvest solutions.";
-  }
-
-  if (message.includes("pellet")) {
-    answer = "ForestTwin supplies high-quality biomass pellets for industrial and commercial use.";
-  }
-
-  if (message.includes("esg") || message.includes("brsr")) {
-    answer = "ForestTwin provides ESG advisory and BRSR reporting services for enterprises.";
-  }
-
-  if (message.includes("about") || message.includes("who")) {
-    answer = "ForestTwin is a sustainability platform powered by FusionPact, offering biochar, carbon credits, DMRV, and more.";
-  }
-
-  if (message.includes("contact") || message.includes("email")) {
-    answer = "You can reach our marketing team at lalam.vasu@fusionpact.com.";
-  }
-
-  res.json({ answer });
 });
 
 const PORT = process.env.PORT || 3000;

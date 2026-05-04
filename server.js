@@ -13,9 +13,11 @@ app.use(express.static("public"));
 let leads = [];
 
 // IMPORTANT: Email credentials are loaded from environment variables for security.
-// You will set GMAIL_USER and GMAIL_APP_PASSWORD in Render's dashboard, NOT in this file.
+// GMAIL_USER and GMAIL_APP_PASSWORD are set in Render's dashboard, NOT in this file.
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD

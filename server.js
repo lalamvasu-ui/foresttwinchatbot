@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
 const knowledge = require("./knowledge");
 
@@ -12,17 +12,8 @@ app.use(express.static("public"));
 
 let leads = [];
 
-// IMPORTANT: Email credentials are loaded from environment variables for security.
-// GMAIL_USER and GMAIL_APP_PASSWORD are set in Render's dashboard, NOT in this file.
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD
-  }
-});
+// Resend API for sending emails (works on Render free tier)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.post("/save-lead", async (req, res) => {
   const { name, email } = req.body;
@@ -34,8 +25,8 @@ app.post("/save-lead", async (req, res) => {
   });
 
   try {
-    await transporter.sendMail({
-      from: process.env.GMAIL_USER,
+    await resend.emails.send({
+      from: "ForestTwin Bot <onboarding@resend.dev>",
       to: "lalam.vasu@fusionpact.com",
       subject: "New ForestTwin Lead",
       text: `

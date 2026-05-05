@@ -18,7 +18,7 @@ function initBubble() {
     <div id="chat-window" class="box" style="display: none;">
       <div class="header">
         <span>ForestTwin Assistant 🌿</span>
-        <span class="close-btn" onclick="toggleChat()">×</span>
+        <span class="close-btn" onclick="closeChat()">×</span>
       </div>
       <div id="messages"></div>
       <div class="input-row">
@@ -32,7 +32,6 @@ function initBubble() {
   setTimeout(toggleChat, 4000);
 }
 
-// Run initBubble when DOM is ready
 if (document.readyState === "loading") {
   window.addEventListener("DOMContentLoaded", initBubble);
 } else {
@@ -44,23 +43,38 @@ function toggleChat() {
   const bubble = document.getElementById("chat-bubble");
 
   if (isOpen) {
-    // Close the chat
     chatWindow.style.display = "none";
     bubble.style.display = "flex";
     isOpen = false;
   } else {
-    // Open the chat
     chatWindow.style.display = "flex";
     bubble.style.display = "none";
     isOpen = true;
 
-    // Show greeting only on first open
     if (!isInitialized) {
       bot("Hi 👋 Welcome to ForestTwin.");
       bot("May I know your name?");
       isInitialized = true;
     }
   }
+}
+
+// X button: close chat AND send conversation email if there was a real conversation
+function closeChat() {
+  if (conversationStarted) {
+    fetch("/end-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId })
+    });
+    conversationStarted = false;
+  }
+
+  const chatWindow = document.getElementById("chat-window");
+  const bubble = document.getElementById("chat-bubble");
+  chatWindow.style.display = "none";
+  bubble.style.display = "flex";
+  isOpen = false;
 }
 
 function bot(msg) {
@@ -151,5 +165,5 @@ function resetInactivityTimer() {
       });
       conversationStarted = false;
     }
-  }, 120000); // 2 minutes
+  }, 120000);
 }

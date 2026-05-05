@@ -6,13 +6,7 @@ let conversationStarted = false;
 let isOpen = false;
 let isInitialized = false;
 
-// Initialize the chat bubble (closed by default)
-window.addEventListener("DOMContentLoaded", initBubble);
-// Fallback if DOMContentLoaded already fired
-if (document.readyState === "complete" || document.readyState === "interactive") {
-  setTimeout(initBubble, 100);
-}
-
+// Initialize bubble, then auto-open after 4 seconds
 function initBubble() {
   const container = document.getElementById("chatbot");
   if (!container) return;
@@ -33,6 +27,16 @@ function initBubble() {
       </div>
     </div>
   `;
+
+  // Auto-open chat after 4 seconds
+  setTimeout(toggleChat, 4000);
+}
+
+// Run initBubble when DOM is ready
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", initBubble);
+} else {
+  initBubble();
 }
 
 function toggleChat() {

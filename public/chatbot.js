@@ -1,3 +1,6 @@
+// Backend URL — full URL so script works when embedded on other sites
+const BACKEND_URL = "https://foresttwinchatbot.onrender.com";
+
 let stage = 0;
 let userName = "";
 let userEmail = "";
@@ -6,7 +9,6 @@ let conversationStarted = false;
 let isOpen = false;
 let isInitialized = false;
 
-// Initialize bubble, then auto-open after 4 seconds
 function initBubble() {
   const container = document.getElementById("chatbot");
   if (!container) return;
@@ -59,10 +61,10 @@ function toggleChat() {
   }
 }
 
-// X button: close chat AND send conversation email if there was a real conversation
+// X button: close AND send conversation email if conversation started
 function closeChat() {
   if (conversationStarted) {
-    fetch("/end-session", {
+    fetch(BACKEND_URL + "/end-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId })
@@ -112,7 +114,7 @@ async function send() {
     stage++;
 
     try {
-      await fetch("/save-lead", {
+      await fetch(BACKEND_URL + "/save-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: userName, email: userEmail, sessionId })
@@ -128,7 +130,7 @@ async function send() {
   else {
     resetInactivityTimer();
     try {
-      const res = await fetch("/chat", {
+      const res = await fetch(BACKEND_URL + "/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, sessionId })
@@ -145,7 +147,7 @@ async function send() {
 window.addEventListener("beforeunload", () => {
   if (conversationStarted) {
     navigator.sendBeacon(
-      "/end-session",
+      BACKEND_URL + "/end-session",
       new Blob([JSON.stringify({ sessionId })], { type: "application/json" })
     );
     conversationStarted = false;
@@ -158,7 +160,7 @@ function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(() => {
     if (conversationStarted) {
-      fetch("/end-session", {
+      fetch(BACKEND_URL + "/end-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId })
